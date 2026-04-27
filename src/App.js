@@ -21,6 +21,13 @@ function App() {
   }, []);
 
   const handleSubmit = async () => {
+
+    // 🔥 Validation
+    if (!title || !description || !time) {
+      alert("Please fill all fields");
+      return;
+    }
+
     const reminder = {
       title,
       description,
@@ -70,6 +77,7 @@ function App() {
       <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
         <option value="NONE">One-time</option>
         <option value="DAILY">Daily</option>
+        <option value="EVERY_2_DAYS">Every 2 Days</option>
         <option value="WEEKLY">Weekly</option>
       </select>
       <br /><br />
@@ -83,6 +91,7 @@ function App() {
           <p><b>{r.title}</b></p>
           <p>{r.description}</p>
           <p>{r.reminderTime}</p>
+          <p>Recurrence: {r.recurrence}</p>
           <button onClick={() => deleteReminder(r.id)}>Delete</button>
           <hr />
         </div>
