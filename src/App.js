@@ -10,6 +10,8 @@ function App() {
   const [intervalDays, setIntervalDays] = useState("");
   const [reminders, setReminders] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState("ALL");
 
   // 🎨 Styles
   const inputStyle = {
@@ -66,9 +68,11 @@ function App() {
 
   // 🔥 Fetch reminders
   const fetchReminders = async () => {
+    setLoading(true);
     const res = await fetch(API);
     const data = await res.json();
     setReminders(data);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -129,6 +133,9 @@ function App() {
 
   // ❌ Delete
   const deleteReminder = async (id) => {
+    const confirmDelete = window.confirm("Are you sure?");
+    if (!confirmDelete) return;
+
     await fetch(`${API}/${id}`, { method: "DELETE" });
     fetchReminders();
   };
@@ -139,6 +146,12 @@ function App() {
     fetchReminders();
   };
 
+  // 🔥 Filter logic
+  const filteredReminders = reminders.filter((r) => {
+    if (filter === "ALL") return true;
+    return r.status === filter;
+  });
+
   return (
     <div style={{
       fontFamily: "Arial",
@@ -148,6 +161,13 @@ function App() {
     }}>
 
       <h1 style={{ textAlign: "center" }}>🔔 Reminder App</h1>
+
+      {/* ✏️ Editing indicator */}
+      {editingId && (
+        <p style={{ color: "orange", textAlign: "center" }}>
+          ✏️ Editing Reminder...
+        </p>
+      )}
 
       {/* FORM */}
       <div style={{
@@ -193,16 +213,34 @@ function App() {
         </button>
       </div>
 
+      {/* FILTERS */}
+      <div style={{ textAlign: "center", marginBottom: "10px" }}>
+        <button onClick={() => setFilter("ALL")}>All</button>
+        <button onClick={() => setFilter("PENDING")}>Pending</button>
+        <button onClick={() => setFilter("DONE")}>Completed</button>
+      </div>
+
       {/* LIST */}
       <h2 style={{ textAlign: "center" }}>📋 All Reminders</h2>
 
-      {reminders.map((r) => (
-        <div key={r.id} style={cardStyle}>
+      {loading && <p style={{ textAlign: "center" }}>Loading...</p>}
+
+      {filteredReminders.map((r) => (
+        <div
+          key={r.id}
+          style={{
+            ...cardStyle,
+            opacity: r.status === "DONE" ? 0.6 : 1
+          }}
+        >
 
           <h3>{r.title}</h3>
           <p>{r.description}</p>
 
-          <p><b>Time:</b> {r.reminderTime}</p>
+          <p>
+            <b>Time:</b>{" "}
+            {new Date(r.reminderTime).toLocaleString()}
+          </p>
 
           <p>
             <b>Repeat:</b>{" "}
@@ -225,8 +263,18 @@ function App() {
 
           <div style={{ marginTop: "10px" }}>
             <button style={editBtn} onClick={() => handleEdit(r)}>Edit</button>
-            <button style={doneBtn} onClick={() => markDone(r.id)}>Done</button>
-            <button style={deleteBtn} onClick={() => deleteReminder(r.id)}>Delete</button>
+
+            <button
+              style={doneBtn}
+              onClick={() => markDone(r.id)}
+              disabled={r.status === "DONE"}
+            >
+              Done
+            </button>
+
+            <button style={deleteBtn} onClick={() => deleteReminder(r.id)}>
+              Delete
+            </button>
           </div>
 
         </div>
