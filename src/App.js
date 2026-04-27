@@ -14,50 +14,58 @@ function App() {
   const [filter, setFilter] = useState("ALL");
 
   // 🎨 Styles
+
   const containerStyle = {
     fontFamily: "Segoe UI, sans-serif",
-    background: "#eef2f7",
     minHeight: "100vh",
-    padding: "20px"
+    padding: "20px",
+    background: "linear-gradient(135deg, #667eea, #764ba2)",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    color: "white"
   };
 
   const formCard = {
-    background: "#fff",
+    background: "rgba(255,255,255,0.15)",
+    backdropFilter: "blur(12px)",
     padding: "20px",
-    borderRadius: "12px",
+    borderRadius: "16px",
     width: "350px",
-    margin: "20px auto",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+    boxShadow: "0 8px 32px rgba(0,0,0,0.2)"
   };
 
   const inputStyle = {
     width: "100%",
     padding: "12px",
     marginBottom: "12px",
-    borderRadius: "8px",
-    border: "1px solid #ddd",
-    outline: "none"
+    borderRadius: "10px",
+    border: "none",
+    outline: "none",
+    background: "rgba(255,255,255,0.3)",
+    color: "white"
   };
 
   const buttonPrimary = {
     width: "100%",
     padding: "12px",
-    background: "linear-gradient(135deg, #4facfe, #00f2fe)",
+    background: "linear-gradient(135deg, #00c6ff, #0072ff)",
     color: "white",
     border: "none",
-    borderRadius: "8px",
+    borderRadius: "10px",
     cursor: "pointer",
-    fontWeight: "bold"
+    fontWeight: "bold",
+    transition: "0.3s"
   };
 
   const cardStyle = {
-    background: "#fff",
+    background: "rgba(255,255,255,0.15)",
+    backdropFilter: "blur(10px)",
     width: "350px",
     margin: "15px auto",
     padding: "15px",
-    borderRadius: "12px",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
-    transition: "0.3s"
+    borderRadius: "16px",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.2)"
   };
 
   const actionBtn = {
@@ -68,7 +76,18 @@ function App() {
     cursor: "pointer"
   };
 
-  // 🔥 Fetch reminders
+  const filterBtn = (active) => ({
+    margin: "5px",
+    padding: "8px 14px",
+    borderRadius: "20px",
+    border: "none",
+    cursor: "pointer",
+    background: active ? "#00c6ff" : "rgba(255,255,255,0.3)",
+    color: "white",
+    fontWeight: "bold"
+  });
+
+  // 🔥 Fetch
   const fetchReminders = async () => {
     setLoading(true);
     const res = await fetch(API);
@@ -132,14 +151,14 @@ function App() {
 
   // ❌ Delete
   const deleteReminder = async (id) => {
-    const confirmDelete = window.confirm("Are you sure?");
+    const confirmDelete = window.confirm("Delete this reminder?");
     if (!confirmDelete) return;
 
     await fetch(`${API}/${id}`, { method: "DELETE" });
     fetchReminders();
   };
 
-  // ✅ Mark Done
+  // ✅ Done
   const markDone = async (id) => {
     await fetch(`${API}/done/${id}`, { method: "PUT" });
     fetchReminders();
@@ -154,16 +173,16 @@ function App() {
   return (
     <div style={containerStyle}>
 
-      <h1 style={{ textAlign: "center", color: "#333" }}>
-        🔔 Smart Reminder
-      </h1>
+      {/* 🖼️ Top Image */}
+      <img
+        src="https://cdn-icons-png.flaticon.com/512/3176/3176363.png"
+        alt="reminder"
+        style={{ width: "80px" }}
+      />
 
-      {/* ✏️ Editing indicator */}
-      {editingId && (
-        <p style={{ textAlign: "center", color: "orange" }}>
-          ✏️ Editing Reminder...
-        </p>
-      )}
+      <h1>Smart Reminder</h1>
+
+      {editingId && <p>✏️ Editing Reminder...</p>}
 
       {/* FORM */}
       <div style={formCard}>
@@ -191,7 +210,7 @@ function App() {
 
         <input
           type="number"
-          placeholder="Repeat every X days (optional)"
+          placeholder="Repeat every X days"
           value={intervalDays}
           onChange={(e) => setIntervalDays(e.target.value)}
           style={inputStyle}
@@ -203,26 +222,23 @@ function App() {
       </div>
 
       {/* FILTERS */}
-      <div style={{ textAlign: "center", marginBottom: "15px" }}>
-        <button onClick={() => setFilter("ALL")}>All</button>
-        <button onClick={() => setFilter("PENDING")}>Pending</button>
-        <button onClick={() => setFilter("DONE")}>Completed</button>
+      <div>
+        <button style={filterBtn(filter === "ALL")} onClick={() => setFilter("ALL")}>All</button>
+        <button style={filterBtn(filter === "PENDING")} onClick={() => setFilter("PENDING")}>Pending</button>
+        <button style={filterBtn(filter === "DONE")} onClick={() => setFilter("DONE")}>Done</button>
       </div>
 
+      <h2>📋 All Reminders</h2>
+
+      {loading && <p>Loading...</p>}
+
       {/* LIST */}
-      <h2 style={{ textAlign: "center" }}>📋 All Reminders</h2>
-
-      {loading && <p style={{ textAlign: "center" }}>Loading...</p>}
-
       {filteredReminders.map((r) => (
         <div
           key={r.id}
           style={{
             ...cardStyle,
-            opacity: r.status === "DONE" ? 0.6 : 1,
-            borderLeft: r.status === "DONE"
-              ? "5px solid green"
-              : "5px solid orange"
+            opacity: r.status === "DONE" ? 0.6 : 1
           }}
         >
 
@@ -230,31 +246,17 @@ function App() {
           <p>{r.description}</p>
 
           <p>
-            <b>Time:</b>{" "}
             {new Date(r.reminderTime).toLocaleString()}
           </p>
 
           <p>
-            <b>Repeat:</b>{" "}
             {r.intervalDays
-              ? r.intervalDays === 1
-                ? "Daily"
-                : `${r.intervalDays} days`
+              ? `Repeat every ${r.intervalDays} days`
               : "One-time"}
           </p>
 
           <p>
-            <b>Status:</b>{" "}
-            <span style={{
-              padding: "5px 10px",
-              borderRadius: "20px",
-              background: r.status === "DONE" ? "#d4edda" : "#fff3cd",
-              color: r.status === "DONE" ? "green" : "orange",
-              fontWeight: "bold",
-              fontSize: "12px"
-            }}>
-              {r.status}
-            </span>
+            <b>Status:</b> {r.status}
           </p>
 
           <div style={{ marginTop: "10px" }}>
