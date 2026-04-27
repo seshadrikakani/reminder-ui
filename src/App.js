@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 
 function App() {
-
   const API = "https://reminder-app-l9oj.onrender.com/reminders";
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [time, setTime] = useState("");
-  const [intervalDays, setIntervalDays] = useState(""); // 🔥 NEW
+  const [intervalDays, setIntervalDays] = useState("");
   const [reminders, setReminders] = useState([]);
+  const [editingId, setEditingId] = useState(null); // 🔥 EDIT STATE
 
   const fetchReminders = async () => {
     const res = await fetch(API);
@@ -20,9 +20,17 @@ function App() {
     fetchReminders();
   }, []);
 
-  const handleSubmit = async () => {
+  // 🔥 EDIT HANDLER (prefill form)
+  const handleEdit = (r) => {
+    setTitle(r.title);
+    setDescription(r.description);
+    setTime(r.reminderTime?.slice(0, 16)); // format for datetime-local
+    setIntervalDays(r.intervalDays || "");
+    setEditingId(r.id);
+  };
 
-    // ✅ Validation
+  // 🔥 ADD / UPDATE
+  const handleSubmit = async () => {
     if (!title || !description || !time) {
       alert("Please fill all required fields");
       return;
@@ -35,17 +43,26 @@ function App() {
       intervalDays: intervalDays ? parseInt(intervalDays) : null
     };
 
-    await fetch(API, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(reminder)
-    });
+    if (editingId) {
+      // UPDATE
+      await fetch(`${API}/${editingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reminder)
+      });
+      setEditingId(null);
+      alert("Reminder updated!");
+    } else {
+      // CREATE
+      await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reminder)
+      });
+      alert("Reminder added!");
+    }
 
-    alert("Reminder added!");
-
-    // reset fields
+    // reset
     setTitle("");
     setDescription("");
     setTime("");
@@ -54,10 +71,15 @@ function App() {
     fetchReminders();
   };
 
+  // DELETE
   const deleteReminder = async (id) => {
-    await fetch(`${API}/${id}`, {
-      method: "DELETE"
-    });
+    await fetch(`${API}/${id}`, { method: "DELETE" });
+    fetchReminders();
+  };
+
+  // 🔥 MARK DONE
+  const markDone = async (id) => {
+    await fetch(`${API}/done/${id}`, { method: "PUT" });
     fetchReminders();
   };
 
@@ -86,7 +108,6 @@ function App() {
       />
       <br /><br />
 
-      {/* 🔥 NEW INPUT */}
       <input
         type="number"
         placeholder="Repeat every X days (optional)"
@@ -96,7 +117,7 @@ function App() {
       <br /><br />
 
       <button onClick={handleSubmit}>
-        Add Reminder
+        {editingId ? "Update Reminder" : "Add Reminder"}
       </button>
 
       <h2>All Reminders</h2>
@@ -106,16 +127,19 @@ function App() {
           <p><b>{r.title}</b></p>
           <p>{r.description}</p>
           <p>{r.reminderTime}</p>
-          <p>Repeat: {r.intervalDays ? `${r.intervalDays} day(s)` : "One-time"}</p>
+          <p>
+            Repeat: {r.intervalDays ? `${r.intervalDays} day(s)` : "One-time"}
+          </p>
+          <p>Status: {r.status}</p>
 
-          <button onClick={() => deleteReminder(r.id)}>
-            Delete
-          </button>
+          {/* 🔥 ACTION BUTTONS */}
+          <button onClick={() => handleEdit(r)}>Edit</button>
+          <button onClick={() => markDone(r.id)}>Done</button>
+          <button onClick={() => deleteReminder(r.id)}>Delete</button>
 
           <hr />
         </div>
       ))}
-
     </div>
   );
 }
