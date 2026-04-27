@@ -14,55 +14,57 @@ function App() {
   const [filter, setFilter] = useState("ALL");
 
   // 🎨 Styles
-  const inputStyle = {
-    width: "100%",
-    padding: "10px",
-    marginBottom: "10px",
-    borderRadius: "5px",
-    border: "1px solid #ccc"
+  const containerStyle = {
+    fontFamily: "Segoe UI, sans-serif",
+    background: "#eef2f7",
+    minHeight: "100vh",
+    padding: "20px"
   };
 
-  const mainButton = {
+  const formCard = {
+    background: "#fff",
+    padding: "20px",
+    borderRadius: "12px",
+    width: "350px",
+    margin: "20px auto",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+  };
+
+  const inputStyle = {
     width: "100%",
-    padding: "10px",
-    background: "#007bff",
+    padding: "12px",
+    marginBottom: "12px",
+    borderRadius: "8px",
+    border: "1px solid #ddd",
+    outline: "none"
+  };
+
+  const buttonPrimary = {
+    width: "100%",
+    padding: "12px",
+    background: "linear-gradient(135deg, #4facfe, #00f2fe)",
     color: "white",
     border: "none",
-    borderRadius: "5px",
-    cursor: "pointer"
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontWeight: "bold"
   };
 
   const cardStyle = {
-    background: "white",
+    background: "#fff",
     width: "350px",
     margin: "15px auto",
     padding: "15px",
-    borderRadius: "10px",
-    boxShadow: "0px 0px 8px rgba(0,0,0,0.1)"
+    borderRadius: "12px",
+    boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
+    transition: "0.3s"
   };
 
-  const editBtn = {
+  const actionBtn = {
     marginRight: "5px",
-    background: "#ffc107",
+    padding: "6px 10px",
     border: "none",
-    padding: "5px 10px",
-    cursor: "pointer"
-  };
-
-  const doneBtn = {
-    marginRight: "5px",
-    background: "green",
-    color: "white",
-    border: "none",
-    padding: "5px 10px",
-    cursor: "pointer"
-  };
-
-  const deleteBtn = {
-    background: "red",
-    color: "white",
-    border: "none",
-    padding: "5px 10px",
+    borderRadius: "6px",
     cursor: "pointer"
   };
 
@@ -79,7 +81,7 @@ function App() {
     fetchReminders();
   }, []);
 
-  // 🔥 Edit handler
+  // ✏️ Edit
   const handleEdit = (r) => {
     setTitle(r.title);
     setDescription(r.description);
@@ -88,7 +90,7 @@ function App() {
     setEditingId(r.id);
   };
 
-  // 🔥 Add / Update
+  // ➕ Add / Update
   const handleSubmit = async () => {
 
     if (!title || !description || !time) {
@@ -104,7 +106,6 @@ function App() {
     };
 
     if (editingId) {
-      // UPDATE
       await fetch(`${API}/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -113,7 +114,6 @@ function App() {
       setEditingId(null);
       alert("Reminder updated!");
     } else {
-      // CREATE
       await fetch(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -122,7 +122,6 @@ function App() {
       alert("Reminder added!");
     }
 
-    // Reset form
     setTitle("");
     setDescription("");
     setTime("");
@@ -146,38 +145,28 @@ function App() {
     fetchReminders();
   };
 
-  // 🔥 Filter logic
+  // 🔍 Filter
   const filteredReminders = reminders.filter((r) => {
     if (filter === "ALL") return true;
     return r.status === filter;
   });
 
   return (
-    <div style={{
-      fontFamily: "Arial",
-      background: "#f4f6f8",
-      minHeight: "100vh",
-      padding: "30px"
-    }}>
+    <div style={containerStyle}>
 
-      <h1 style={{ textAlign: "center" }}>🔔 Reminder App</h1>
+      <h1 style={{ textAlign: "center", color: "#333" }}>
+        🔔 Smart Reminder
+      </h1>
 
       {/* ✏️ Editing indicator */}
       {editingId && (
-        <p style={{ color: "orange", textAlign: "center" }}>
+        <p style={{ textAlign: "center", color: "orange" }}>
           ✏️ Editing Reminder...
         </p>
       )}
 
       {/* FORM */}
-      <div style={{
-        background: "white",
-        padding: "20px",
-        borderRadius: "10px",
-        width: "350px",
-        margin: "20px auto",
-        boxShadow: "0px 0px 10px rgba(0,0,0,0.1)"
-      }}>
+      <div style={formCard}>
 
         <input
           placeholder="Title"
@@ -208,13 +197,13 @@ function App() {
           style={inputStyle}
         />
 
-        <button onClick={handleSubmit} style={mainButton}>
+        <button onClick={handleSubmit} style={buttonPrimary}>
           {editingId ? "Update Reminder" : "Add Reminder"}
         </button>
       </div>
 
       {/* FILTERS */}
-      <div style={{ textAlign: "center", marginBottom: "10px" }}>
+      <div style={{ textAlign: "center", marginBottom: "15px" }}>
         <button onClick={() => setFilter("ALL")}>All</button>
         <button onClick={() => setFilter("PENDING")}>Pending</button>
         <button onClick={() => setFilter("DONE")}>Completed</button>
@@ -230,7 +219,10 @@ function App() {
           key={r.id}
           style={{
             ...cardStyle,
-            opacity: r.status === "DONE" ? 0.6 : 1
+            opacity: r.status === "DONE" ? 0.6 : 1,
+            borderLeft: r.status === "DONE"
+              ? "5px solid green"
+              : "5px solid orange"
           }}
         >
 
@@ -254,25 +246,37 @@ function App() {
           <p>
             <b>Status:</b>{" "}
             <span style={{
+              padding: "5px 10px",
+              borderRadius: "20px",
+              background: r.status === "DONE" ? "#d4edda" : "#fff3cd",
               color: r.status === "DONE" ? "green" : "orange",
-              fontWeight: "bold"
+              fontWeight: "bold",
+              fontSize: "12px"
             }}>
               {r.status}
             </span>
           </p>
 
           <div style={{ marginTop: "10px" }}>
-            <button style={editBtn} onClick={() => handleEdit(r)}>Edit</button>
+            <button
+              style={{ ...actionBtn, background: "#ffc107" }}
+              onClick={() => handleEdit(r)}
+            >
+              Edit
+            </button>
 
             <button
-              style={doneBtn}
+              style={{ ...actionBtn, background: "green", color: "white" }}
               onClick={() => markDone(r.id)}
               disabled={r.status === "DONE"}
             >
               Done
             </button>
 
-            <button style={deleteBtn} onClick={() => deleteReminder(r.id)}>
+            <button
+              style={{ ...actionBtn, background: "red", color: "white" }}
+              onClick={() => deleteReminder(r.id)}
+            >
               Delete
             </button>
           </div>
