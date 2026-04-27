@@ -1,23 +1,93 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
 
 function App() {
+
+  const API = "https://reminder-app-l9oj.onrender.com/reminders";
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [time, setTime] = useState("");
+  const [recurrence, setRecurrence] = useState("NONE");
+  const [reminders, setReminders] = useState([]);
+
+  const fetchReminders = async () => {
+    const res = await fetch(API);
+    const data = await res.json();
+    setReminders(data);
+  };
+
+  useEffect(() => {
+    fetchReminders();
+  }, []);
+
+  const handleSubmit = async () => {
+    const reminder = {
+      title,
+      description,
+      reminderTime: time,
+      recurrence
+    };
+
+    await fetch(API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(reminder)
+    });
+
+    alert("Reminder added!");
+
+    setTitle("");
+    setDescription("");
+    setTime("");
+    setRecurrence("NONE");
+
+    fetchReminders();
+  };
+
+  const deleteReminder = async (id) => {
+    await fetch(`${API}/${id}`, {
+      method: "DELETE"
+    });
+
+    fetchReminders();
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ textAlign: "center", marginTop: "50px" }}>
+      <h1>Reminder App 🔔</h1>
+
+      <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <br /><br />
+
+      <input placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+      <br /><br />
+
+      <input type="datetime-local" value={time} onChange={(e) => setTime(e.target.value)} />
+      <br /><br />
+
+      <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
+        <option value="NONE">One-time</option>
+        <option value="DAILY">Daily</option>
+        <option value="WEEKLY">Weekly</option>
+      </select>
+      <br /><br />
+
+      <button onClick={handleSubmit}>Add Reminder</button>
+
+      <h2>All Reminders</h2>
+
+      {reminders.map((r) => (
+        <div key={r.id}>
+          <p><b>{r.title}</b></p>
+          <p>{r.description}</p>
+          <p>{r.reminderTime}</p>
+          <button onClick={() => deleteReminder(r.id)}>Delete</button>
+          <hr />
+        </div>
+      ))}
+
     </div>
   );
 }
