@@ -7,7 +7,7 @@ function App() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [time, setTime] = useState("");
-  const [recurrence, setRecurrence] = useState("NONE");
+  const [intervalDays, setIntervalDays] = useState(""); // 🔥 NEW
   const [reminders, setReminders] = useState([]);
 
   const fetchReminders = async () => {
@@ -22,9 +22,9 @@ function App() {
 
   const handleSubmit = async () => {
 
-    // 🔥 Validation
+    // ✅ Validation
     if (!title || !description || !time) {
-      alert("Please fill all fields");
+      alert("Please fill all required fields");
       return;
     }
 
@@ -32,7 +32,7 @@ function App() {
       title,
       description,
       reminderTime: time,
-      recurrence
+      intervalDays: intervalDays ? parseInt(intervalDays) : null
     };
 
     await fetch(API, {
@@ -45,10 +45,11 @@ function App() {
 
     alert("Reminder added!");
 
+    // reset fields
     setTitle("");
     setDescription("");
     setTime("");
-    setRecurrence("NONE");
+    setIntervalDays("");
 
     fetchReminders();
   };
@@ -57,7 +58,6 @@ function App() {
     await fetch(`${API}/${id}`, {
       method: "DELETE"
     });
-
     fetchReminders();
   };
 
@@ -65,24 +65,39 @@ function App() {
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>Reminder App 🔔</h1>
 
-      <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <input
+        placeholder="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
       <br /><br />
 
-      <input placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+      <input
+        placeholder="Description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+      />
       <br /><br />
 
-      <input type="datetime-local" value={time} onChange={(e) => setTime(e.target.value)} />
+      <input
+        type="datetime-local"
+        value={time}
+        onChange={(e) => setTime(e.target.value)}
+      />
       <br /><br />
 
-      <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
-        <option value="NONE">One-time</option>
-        <option value="DAILY">Daily</option>
-        <option value="EVERY_2_DAYS">Every 2 Days</option>
-        <option value="WEEKLY">Weekly</option>
-      </select>
+      {/* 🔥 NEW INPUT */}
+      <input
+        type="number"
+        placeholder="Repeat every X days (optional)"
+        value={intervalDays}
+        onChange={(e) => setIntervalDays(e.target.value)}
+      />
       <br /><br />
 
-      <button onClick={handleSubmit}>Add Reminder</button>
+      <button onClick={handleSubmit}>
+        Add Reminder
+      </button>
 
       <h2>All Reminders</h2>
 
@@ -91,8 +106,12 @@ function App() {
           <p><b>{r.title}</b></p>
           <p>{r.description}</p>
           <p>{r.reminderTime}</p>
-          <p>Recurrence: {r.recurrence}</p>
-          <button onClick={() => deleteReminder(r.id)}>Delete</button>
+          <p>Repeat: {r.intervalDays ? `${r.intervalDays} day(s)` : "One-time"}</p>
+
+          <button onClick={() => deleteReminder(r.id)}>
+            Delete
+          </button>
+
           <hr />
         </div>
       ))}
