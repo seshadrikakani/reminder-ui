@@ -128,7 +128,11 @@ function App() {
           <p>{r.description}</p>
           <p>{r.reminderTime}</p>
           <p>
-            Repeat: {r.intervalDays ? `${r.intervalDays} day(s)` : "One-time"}
+            Repeat: {r.intervalDays
+              ? r.intervalDays === 1
+                ? "Daily"
+                : `${r.intervalDays} day(s)`
+              : "One-time"}
           </p>
           <p>Status: {r.status}</p>
 
